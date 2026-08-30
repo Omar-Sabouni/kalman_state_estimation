@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="A Kalman filter, an alpha–beta filter and a moving average tracking the same target from the same noisy fixes.">
+  <title>Three ways to track a target</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#experiment">Skip to run controls</a>
+  <div id="runtimeWarning" class="warning" role="alert" hidden></div>
+  <noscript><div class="warning" role="alert">JavaScript is required to calculate and draw estimator output.</div></noscript>
+
+  <main>
+    <header class="app-heading">
+      <div class="app-heading__identity">
+        <h1 id="pageTitle">Three ways to track a target</h1>
+        <p class="standfirst">A Kalman filter, an alpha–beta filter and a moving average, all fed the same noisy position fixes.</p>
+      </div>
+    </header>
+
+    <section id="experiment" class="instrument" aria-labelledby="experimentTitle" tabindex="-1">
+      <h2 id="experimentTitle" class="sr-only">Run</h2>
+
+      <aside id="controls" class="control-panel" aria-labelledby="controlsTitle">
+        <form id="simulationControls">
+          <div class="control-panel__heading">
+            <h3 id="controlsTitle" class="sr-only">Settings</h3>
+            <span id="runStatus" class="run-status" role="status" aria-live="polite">Ready</span>
+          </div>
+          <div class="control-strip">
+            <div class="compact-field compact-field--preset">
+              <label for="scenarioPreset">Scenario</label>
+              <select id="scenarioPreset">
+                <option value="balanced" selected>Balanced tracking</option>
+                <option value="smooth">Smooth cruise</option>
+                <option value="noisy-sensor">Noisy sensor</option>
+                <option value="maneuvering">Hard maneuvers</option>
+                <option value="model-mismatch">Model mismatch</option>
+                <option value="custom" disabled>Custom settings</option>
+              </select>
+            </div>
+            <div class="compact-field control-field">
+              <div class="control-field__heading"><label for="processNoise">Target jitter <i>Q</i></label><output id="processNoiseValue" for="processNoise">0.20</output></div>
+              <input id="processNoise" type="range" min="0.01" max="1.00" step="0.01" value="0.20" aria-describedby="processNoiseHelp">
+              <p id="processNoiseHelp" class="sr-only">True process acceleration standard deviation.</p>
+              <div class="range-bounds" aria-hidden="true"><span>.01</span><span>1.0</span></div>
+            </div>
+            <div class="compact-field control-field">
+              <div class="control-field__heading"><label for="measurementNoise">Sensor noise <i>R</i></label><output id="measurementNoiseValue" for="measurementNoise">1.20</output></div>
+              <input id="measurementNoise" type="range" min="0.10" max="8.00" step="0.10" value="1.20" aria-describedby="measurementNoiseHelp">
+              <p id="measurementNoiseHelp" class="sr-only">True sensor noise standard deviation.</p>
+              <div class="range-bounds" aria-hidden="true"><span>.1</span><span>8.0</span></div>
+            </div>
+            <div class="compact-field control-field">
+              <div class="control-field__heading"><label for="window">Error window</label><output id="windowValue" for="window">12</output></div>
+              <input id="window" type="range" min="5" max="40" step="1" value="12" aria-describedby="windowHelp">
+              <p id="windowHelp" class="sr-only">Number of recent samples in the rolling RMSE.</p>
+              <div class="range-bounds" aria-hidden="true"><span>5</span><span>40</span></div>
+            </div>
+            <div class="compact-field compact-field--speed">
+              <label for="playbackSpeed">Speed</label>
+              <select id="playbackSpeed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="instant">Instant</option></select>
+            </div>
+            <div class="playback-actions" role="group" aria-label="Simulation playback">
+              <button id="runButton" class="button button--primary" type="button">Run</button>
+              <button id="pauseButton" class="button" type="button" disabled>Pause</button>
+              <button id="stepButton" class="button" type="button">Step</button>
+              <button id="resetButton" class="button" type="button">Reset</button>
+              <button id="restoreDefaultsButton" class="button button--quiet" type="button">Defaults</button>
+            </div>
+          </div>
+          <div class="control-panel__footer">
+            <div class="playback-status"><span>Fix <code id="stepValue">0</code> of <code id="stepTotal">80</code></span><progress id="stepProgress" max="80" value="0">0 of 80 steps</progress></div>
+            <details id="advancedControls" class="advanced-controls">
+              <summary>Filter settings</summary>
+              <div class="advanced-controls__body">
+                <fieldset class="control-group">
+                  <legend>What the filters assume</legend>
+                  <div class="advanced-grid">
+                    <div class="control-field"><div class="control-field__heading"><label for="assumedProcessNoise">Q assumed</label><output id="assumedProcessNoiseValue" for="assumedProcessNoise">0.20</output></div><input id="assumedProcessNoise" type="range" min="0.01" max="1.00" step="0.01" value="0.20"></div>
+                    <div class="control-field"><div class="control-field__heading"><label for="assumedMeasurementNoise">R assumed</label><output id="assumedMeasurementNoiseValue" for="assumedMeasurementNoise">1.20</output></div><input id="assumedMeasurementNoise" type="range" min="0.10" max="8.00" step="0.10" value="1.20"></div>
+                    <div class="control-field"><div class="control-field__heading"><label for="alpha">Alpha–Beta α</label><output id="alphaValue" for="alpha">0.85</output></div><input id="alpha" type="range" min="0.05" max="1.00" step="0.01" value="0.85"></div>
+                    <div class="control-field"><div class="control-field__heading"><label for="beta">Alpha–Beta β</label><output id="betaValue" for="beta">0.05</output></div><input id="beta" type="range" min="0.01" max="0.50" step="0.01" value="0.05"></div>
+                    <div class="control-field"><div class="control-field__heading"><label for="movingAverageWindow">Moving-average window</label><output id="movingAverageWindowValue" for="movingAverageWindow">5</output></div><input id="movingAverageWindow" type="range" min="2" max="20" step="1" value="5"></div>
+                  </div>
+                </fieldset>
+                <fieldset class="series-controls">
+                  <legend>Show</legend>
+                  <label><input id="toggleMeasurements" type="checkbox" checked> Measurements</label>
+                  <label><input id="toggleKalman" type="checkbox" checked> Kalman</label>
+                  <label><input id="toggleAlphaBeta" type="checkbox" checked> Alpha–Beta</label>
+                  <label><input id="toggleMovingAverage" type="checkbox" checked> Moving average</label>
+                  <label><input id="toggleUncertainty" type="checkbox" checked> 95% covariance</label>
+                </fieldset>
+              </div>
+            </details>
+          </div>
+        </form>
+      </aside>
+
+      <article class="plot-panel plot-panel--trajectory" aria-labelledby="trajectoryHeading">
+        <header class="plot-heading"><div><h3 id="trajectoryHeading">Track</h3></div><div id="trajectoryLegend" class="chart-legend" role="group" aria-label="Trajectory series"></div></header>
+        <div class="chart-frame chart-frame--trajectory"><svg id="trajectoryChart" class="chart" viewBox="0 0 960 600" role="img" aria-labelledby="trajectorySvgTitle trajectorySvgDescription" preserveAspectRatio="xMidYMid meet"><title id="trajectorySvgTitle">Two-dimensional target and estimator trajectories</title><desc id="trajectorySvgDescription">Start a run to draw truth, measurements, and estimates.</desc><text class="chart-empty" x="480" y="300" text-anchor="middle">Press Run</text></svg></div>
+        <p id="trajectorySummary" class="chart-summary" aria-live="polite">No trajectory has been drawn yet.</p>
+      </article>
+
+
+      <section id="comparison" class="diagnostic-workbench" aria-labelledby="comparisonTitle">
+        <header class="section-label section-label--workbench">
+          <div><h2 id="comparisonTitle">How each one is doing</h2></div>
+          <label class="view-select" for="diagnosticView">Plot<select id="diagnosticView"><option value="rmse" selected>Rolling position error</option><option value="innovation">Innovation / NIS</option><option value="covariance">Posterior covariance</option><option value="gain">Position gain</option><option value="comparison">Whole-run RMSE</option></select></label>
+        </header>
+
+        <div class="diagnostic-layout">
+          <section id="diagnostics" class="diagnostic-rail" aria-labelledby="diagnosticsTitle">
+            <h2 id="diagnosticsTitle" class="sr-only">Selectable synchronized filter diagnostic</h2>
+            <article class="plot-panel diagnostic-view" data-diagnostic-view="rmse" aria-labelledby="rmseHeading"><header class="plot-heading"><h3 id="rmseHeading">Rolling position error / RMSE</h3><div id="rmseLegend" class="chart-legend" role="group" aria-label="RMSE series"></div></header><div class="chart-frame"><svg id="rmseChart" class="chart" viewBox="0 0 720 240" role="img" aria-labelledby="rmseSvgTitle rmseSvgDescription"><title id="rmseSvgTitle">Rolling RMSE by estimator</title><desc id="rmseSvgDescription">No rolling error data is available yet.</desc></svg></div><p id="rmseSummary" class="chart-summary">No rolling error has been calculated yet.</p></article>
+            <article class="plot-panel diagnostic-view" data-diagnostic-view="innovation" aria-labelledby="innovationHeading" hidden><header class="plot-heading"><h3 id="innovationHeading">Innovation / normalized squared residual</h3><div id="innovationLegend" class="chart-legend" role="group" aria-label="Innovation series"></div></header><div class="chart-frame"><svg id="innovationChart" class="chart" viewBox="0 0 720 240" role="img" aria-labelledby="innovationSvgTitle innovationSvgDescription"><title id="innovationSvgTitle">Normalized innovation squared through time</title><desc id="innovationSvgDescription">No innovation data is available yet.</desc></svg></div><p id="innovationSummary" class="chart-summary">No innovation has been calculated yet.</p></article>
+            <article class="plot-panel diagnostic-view" data-diagnostic-view="covariance" aria-labelledby="covarianceHeading" hidden><header class="plot-heading"><h3 id="covarianceHeading">Posterior covariance / P</h3><div id="covarianceLegend" class="chart-legend" role="group" aria-label="Covariance series"></div></header><div class="chart-frame"><svg id="covarianceChart" class="chart" viewBox="0 0 720 240" role="img" aria-labelledby="covarianceSvgTitle covarianceSvgDescription"><title id="covarianceSvgTitle">Posterior position covariance through time</title><desc id="covarianceSvgDescription">No covariance data is available yet.</desc></svg></div><p id="covarianceSummary" class="chart-summary">No posterior covariance has been calculated yet.</p></article>
+            <article class="plot-panel diagnostic-view" data-diagnostic-view="gain" aria-labelledby="gainHeading" hidden><header class="plot-heading"><h3 id="gainHeading">Potential position gain / K</h3><div id="gainLegend" class="chart-legend" role="group" aria-label="Gain series"></div></header><div class="chart-frame"><svg id="gainChart" class="chart" viewBox="0 0 720 240" role="img" aria-labelledby="gainSvgTitle gainSvgDescription"><title id="gainSvgTitle">Potential Kalman position gain through time</title><desc id="gainSvgDescription">No gain data is available yet.</desc></svg></div><p id="gainSummary" class="chart-summary">No Kalman gain has been calculated yet.</p></article>
+            <article class="plot-panel diagnostic-view" data-diagnostic-view="comparison" aria-labelledby="comparisonChartHeading" hidden><header class="plot-heading"><h3 id="comparisonChartHeading">Whole-run position RMSE</h3><div id="comparisonLegend" class="chart-legend" role="group" aria-label="Comparison series"></div></header><div class="chart-frame"><svg id="comparisonChart" class="chart" viewBox="0 0 720 380" role="img" aria-labelledby="comparisonSvgTitle comparisonSvgDescription"><title id="comparisonSvgTitle">Estimator RMSE comparison</title><desc id="comparisonSvgDescription">No comparison is available yet.</desc></svg></div><p id="comparisonSummary" class="chart-summary">No estimator comparison is available yet.</p></article>
+          </section>
+
+          <article class="table-panel" aria-labelledby="rankingTitle">
+            <header class="plot-heading"><div><h3 id="rankingTitle">Closest right now</h3></div></header>
+            <div class="table-region" role="region" aria-labelledby="rankingTitle" tabindex="0"><table id="rankingTable"><thead><tr><th scope="col">Order</th><th scope="col">Estimator</th><th scope="col">Rolling RMSE</th><th scope="col"><abbr title="Change since previous step">Δ step</abbr></th></tr></thead><tbody id="rankingTableBody"><tr class="empty-row"><td colspan="4">Waiting for the first observation.</td></tr></tbody></table></div>
+          </article>
+        </div>
+
+        <details class="raw-data">
+          <summary>Numbers at this fix</summary>
+          <dl id="metrics" class="readout-strip" aria-label="Current run readout">
+        <div id="leaderMetric" class="readout"><dt>Error window</dt><dd><span id="leaderName">12</span> fixes</dd><dd id="leaderRmse" class="readout__detail"></dd></div>
+        <div id="stepMetric" class="readout"><dt>Fix</dt><dd id="stepMetricValue">0 / 80</dd></div>
+        <div id="innovationMetric" class="readout"><dt>Kalman surprise (NIS)</dt><dd id="innovationMetricValue">—</dd></div>
+        <div id="covarianceMetric" class="readout"><dt>Kalman variance (P<sub>xx</sub>, P<sub>yy</sub>)</dt><dd id="covarianceMetricValue">—</dd></div>
+      </dl>
+          <div class="table-region table-region--diagnostics" role="region" aria-labelledby="diagnosticsTableTitle" tabindex="0"><table id="diagnosticsTable"><caption id="diagnosticsTableTitle">Latest estimator diagnostics</caption><thead><tr><th scope="col">Estimator</th><th scope="col">Rolling RMSE</th><th scope="col">Squared residual</th><th scope="col">Direction</th></tr></thead><tbody id="diagnosticsTableBody"><tr class="empty-row"><td colspan="4">Start a run to populate diagnostics.</td></tr></tbody></table></div>
+        </details>
+      </section>
+    </section>
+
+    <section class="appendices" aria-labelledby="appendicesTitle">
+      <header class="section-label"><div><h2 id="appendicesTitle">On a budget</h2><p>Suppose every correction costs compute. When is it worth spending?</p></div></header>
+
+      <details id="budget-strategies" class="appendix-entry">
+        <summary><span><strong>Spend a compute budget</strong></span></summary>
+        <div class="appendix-body">
+          <div class="budget-row"><div class="control-field budget-control"><div class="control-field__heading"><label for="budget">Compute budget</label><output id="budgetValue" for="budget">140</output></div><input id="budget" type="range" min="80" max="240" step="1" value="140" aria-describedby="budgetHelp"><div class="range-bounds" aria-hidden="true"><span>80</span><span>240 credits</span></div><p id="budgetHelp" class="field-note">Visible cost: <code id="budgetMetricValue">0 / 140</code></p></div><p id="budgetFeasibilityStatus" class="budget-status" role="status" aria-live="polite">Select a budget to compare feasible schedules.</p></div>
+          <div class="table-region" role="region" aria-labelledby="benchmarkTitle" tabindex="0"><table id="benchmarkTable"><caption id="benchmarkTitle">Whole-run policy comparison</caption><thead><tr><th scope="col">Policy</th><th scope="col">Budget status</th><th scope="col">Total cost</th><th scope="col">Total squared error</th><th scope="col">RMSE</th></tr></thead><tbody id="benchmarkTableBody"><tr class="empty-row"><td colspan="5">Complete the run to compare policies.</td></tr></tbody></table></div>
+          <article class="plot-panel" aria-labelledby="budgetChartHeading"><header class="plot-heading"><h3 id="budgetChartHeading">Action by step</h3><div id="budgetLegend" class="chart-legend" role="group" aria-label="Budget schedule series"></div></header><div class="chart-frame chart-frame--schedule"><svg id="budgetChart" class="chart" viewBox="0 0 960 300" role="img" aria-labelledby="budgetSvgTitle budgetSvgDescription"><title id="budgetSvgTitle">Estimator schedule under the selected compute budget</title><desc id="budgetSvgDescription">No budget schedule is available yet.</desc></svg></div><p id="budgetSummary" class="chart-summary">No compute schedule has been calculated yet.</p></article>
+          <div class="strategy-grid">
+            <article class="table-panel" aria-labelledby="offlineTitle"><header class="plot-heading"><div><h3 id="offlineTitle">Look-ahead</h3><p>Uses the simulated path, so it cheats.</p></div></header><p id="offlineSummary" class="summary-line">Pending.</p><div class="table-region table-region--schedule" role="region" aria-labelledby="offlineTitle" tabindex="0"><table id="offlineTable"><thead><tr><th scope="col">Step</th><th scope="col">Action</th><th scope="col">Cost</th><th scope="col">Squared error</th></tr></thead><tbody id="offlineTableBody"><tr class="empty-row"><td colspan="4">No schedule yet.</td></tr></tbody></table></div></article>
+            <article class="table-panel" aria-labelledby="onlineTitle"><header class="plot-heading"><div><h3 id="onlineTitle">Online</h3><p>Uses only what it has seen.</p></div></header><p id="onlineSummary" class="summary-line">Pending.</p><div class="table-region table-region--schedule" role="region" aria-labelledby="onlineTitle" tabindex="0"><table id="onlineTable"><thead><tr><th scope="col">Step</th><th scope="col">Action</th><th scope="col">Cost</th><th scope="col">Squared error</th><th scope="col">Budget left</th></tr></thead><tbody id="onlineTableBody"><tr class="empty-row"><td colspan="5">No schedule yet.</td></tr></tbody></table></div></article>
+          </div>
+        </div>
+      </details>
+
+    </section>
+  </main>
+  <script>
+    (function () {
+      var warning = document.getElementById("runtimeWarning");
+      if (location.protocol === "file:" && warning) {
+        warning.hidden = false;
+        warning.textContent = "Serve this tool over HTTP so its modules can load. Run npm run dev and open the address it prints.";
+      }
+    })();
+  </script>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
