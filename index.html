@@ -17,7 +17,7 @@
     <header class="app-heading">
       <div class="app-heading__identity">
         <h1 id="pageTitle">2D estimator comparison</h1>
-        <p class="standfirst">A Kalman filter, an alpha–beta filter and a moving average, all fed the same noisy position fixes.</p>
+        <p class="standfirst">This compares a Kalman filter, an alpha–beta filter and a moving average on the same noisy position measurements.</p>
       </div>
     </header>
 
@@ -110,7 +110,7 @@
 
       <section id="comparison" class="diagnostic-workbench" aria-labelledby="comparisonTitle">
         <header class="section-label section-label--workbench">
-          <div><h2 id="comparisonTitle">How each one is doing</h2></div>
+          <div><h2 id="comparisonTitle">Estimator error</h2></div>
           <label class="view-select" for="diagnosticView">Plot<select id="diagnosticView"><option value="rmse" selected>Rolling position error</option><option value="innovation">Innovation (NIS)</option><option value="covariance">Posterior covariance</option><option value="gain">Kalman gain</option><option value="comparison">Whole-run RMSE</option></select></label>
         </header>
 
@@ -125,7 +125,7 @@
           </section>
 
           <article class="table-panel" aria-labelledby="rankingTitle">
-            <header class="plot-heading"><div><h3 id="rankingTitle">Closest right now</h3></div></header>
+            <header class="plot-heading"><div><h3 id="rankingTitle">Lowest error at this step</h3></div></header>
             <div class="table-region" role="region" aria-labelledby="rankingTitle" tabindex="0"><table id="rankingTable"><thead><tr><th scope="col">Order</th><th scope="col">Estimator</th><th scope="col">Rolling RMSE</th><th scope="col"><abbr title="Change since previous step">Δ step</abbr></th></tr></thead><tbody id="rankingTableBody"><tr class="empty-row"><td colspan="4">Press Run to start.</td></tr></tbody></table></div>
           </article>
         </div>
@@ -143,7 +143,7 @@
     </section>
 
     <section class="appendices" aria-labelledby="appendicesTitle">
-      <header class="section-label"><div><h2 id="appendicesTitle">On a budget</h2><p>Each correction costs credits. Compare two ways to spend a fixed budget.</p></div></header>
+      <header class="section-label"><div><h2 id="appendicesTitle">Corrections on a budget</h2><p>Each correction costs credits. Compare two ways to spend a fixed budget.</p></div></header>
 
       <details id="budget-strategies" class="appendix-entry">
         <summary><span><strong>Spend a budget of credits</strong></span></summary>

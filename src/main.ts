@@ -429,7 +429,7 @@ function renderTrajectory(visible: readonly SimulationStep[]): void {
   } else {
     setText(
       elements.trajectorySummary,
-      `Step ${latest.index + 1}: truth (${format(latest.truth.px, 1)}, ${format(latest.truth.py, 1)}), Kalman (${format(latest.estimates.kalman.px, 1)}, ${format(latest.estimates.kalman.py, 1)}).`,
+      `At step ${latest.index + 1}, the true position is (${format(latest.truth.px, 1)}, ${format(latest.truth.py, 1)}) and the Kalman estimate is (${format(latest.estimates.kalman.px, 1)}, ${format(latest.estimates.kalman.py, 1)}).`,
     );
   }
 }
@@ -543,12 +543,12 @@ function renderDiagnostics(visible: readonly SimulationStep[]): void {
     setText(elements.gainSummary, "");
     return;
   }
-  const rollingValues = ESTIMATOR_IDS
-    .map((method) => `${METHOD_LABELS[method]} ${format(latestPoint.values[method])}`)
-    .join(" / ");
+  const rollingValues = listSentence(
+    ESTIMATOR_IDS.map((method) => `${format(latestPoint.values[method])} for ${METHOD_LABELS[method]}`),
+  );
   setText(
     elements.rmseSummary,
-    `${state.config.rollingWindow}-sample RMSE / ${rollingValues}.`,
+    `Over the last ${state.config.rollingWindow} samples, RMSE is ${rollingValues}.`,
   );
   const latestNis = latestStep.kalmanDiagnostics.normalizedInnovationSquared.total;
   setText(
@@ -557,11 +557,11 @@ function renderDiagnostics(visible: readonly SimulationStep[]): void {
   );
   setText(
     elements.covarianceSummary,
-    `Pxx ${format(latestStep.kalmanPosteriorCovariance[0][0], 3)}, Pyy ${format(latestStep.kalmanPosteriorCovariance[1][1], 3)}.`,
+    `Pxx is ${format(latestStep.kalmanPosteriorCovariance[0][0], 3)} and Pyy is ${format(latestStep.kalmanPosteriorCovariance[1][1], 3)}.`,
   );
   setText(
     elements.gainSummary,
-    `Kxx ${format(Math.abs(latestStep.kalmanDiagnostics.potentialGain.x[0]), 3)}, Kyy ${format(Math.abs(latestStep.kalmanDiagnostics.potentialGain.y[1]), 3)}.`,
+    `Kxx is ${format(Math.abs(latestStep.kalmanDiagnostics.potentialGain.x[0]), 3)} and Kyy is ${format(Math.abs(latestStep.kalmanDiagnostics.potentialGain.y[1]), 3)}.`,
   );
   renderDiagnosticsTable(
     elements.diagnosticsTableBody,
@@ -704,7 +704,7 @@ function renderComparison(): void {
   });
   setText(
     elements.comparisonSummary,
-    `Whole-run RMSE / ${data.map((item) => `${item.label} ${format(item.value)}`).join(" / ")}.`,
+    `Over the whole run, RMSE is ${listSentence(data.map((item) => `${format(item.value)} for ${item.label}`))}.`,
   );
 }
 
@@ -713,9 +713,22 @@ function actionCounts(schedule: readonly BudgetAction[]): string {
   for (const action of schedule) {
     counts.set(action, (counts.get(action) ?? 0) + 1);
   }
-  return ["predict-only", "correct-x", "correct-y", "correct-xy"]
-    .map((action) => `${action}: ${counts.get(action as BudgetAction) ?? 0}`)
-    .join(", ");
+  const names: Record<string, string> = {
+    "predict-only": "prediction-only steps",
+    "correct-x": "x corrections",
+    "correct-y": "y corrections",
+    "correct-xy": "full corrections",
+  };
+  return `It used ${listSentence(
+    ["predict-only", "correct-x", "correct-y", "correct-xy"].map(
+      (action) => `${counts.get(action as BudgetAction) ?? 0} ${names[action]}`,
+    ),
+  )}.`;
+}
+
+function listSentence(items: readonly string[]): string {
+  if (items.length <= 1) return items.join("");
+  return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
 }
 
 function renderBudgetResults(): void {
@@ -757,7 +770,7 @@ function renderBudgetResults(): void {
   renderScheduleTable(elements.onlineTableBody, state.online.rows, true);
   setText(
     elements.onlineSummary,
-    `Cost ${state.online.totalCost} of ${state.config.budget}, RMSE ${format(state.online.rmse)}. ${actionCounts(state.online.schedule)}`,
+    `Spent ${state.online.totalCost} of ${state.config.budget} credits for an RMSE of ${format(state.online.rmse)}. ${actionCounts(state.online.schedule)}`,
   );
   if (state.beam === null) {
     renderScheduleTable(elements.offlineTableBody, [], false);
@@ -766,19 +779,19 @@ function renderBudgetResults(): void {
     renderScheduleTable(elements.offlineTableBody, state.beam.rows, false);
     setText(
       elements.offlineSummary,
-      `Cost ${state.beam.totalCost} of ${state.config.budget}, RMSE ${format(state.beam.rmse)}.`,
+      `Spent ${state.beam.totalCost} of ${state.config.budget} credits for an RMSE of ${format(state.beam.rmse)}.`,
     );
   }
   const lookAheadText = state.beam === null
     ? "The look-ahead schedule is still running."
-    : `The look-ahead schedule reaches ${format(state.beam.rmse)} RMSE at ${state.beam.totalCost} credits.`;
+    : `The look-ahead schedule reached an RMSE of ${format(state.beam.rmse)} with ${state.beam.totalCost} credits.`;
   setText(
     elements.budgetFeasibilityStatus,
-    `Every schedule reserves at least ${state.config.steps} prediction credits. The online policy uses ${state.online.totalCost}/${state.config.budget}. ${lookAheadText}`,
+    `Each schedule needs at least ${state.config.steps} credits for predictions. The online policy spent ${state.online.totalCost} of ${state.config.budget} credits. ${lookAheadText}`,
   );
   setText(
     elements.budgetSummary,
-    `The online policy uses current innovation and uncertainty. ${lookAheadText}`,
+    `The online policy decides from what it has seen so far. ${lookAheadText}`,
   );
   renderBenchmarkTable(
     elements.benchmarkTableBody,

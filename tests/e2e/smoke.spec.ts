@@ -68,7 +68,7 @@ test("loads the page and completes the analyses", async ({ page }) => {
 
   await page.locator("#budget-strategies > summary").click();
   await expect(page.locator("#offlineSummary")).toContainText(
-    "Cost ",
+    "Spent ",
     { timeout: 15_000 },
   );
   await expect(page.locator("#benchmarkTableBody .status-pill")).toHaveCount(0);
