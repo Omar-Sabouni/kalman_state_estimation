@@ -787,11 +787,11 @@ function renderBudgetResults(): void {
     : `The look-ahead schedule reached an RMSE of ${format(state.beam.rmse)} with ${state.beam.totalCost} credits.`;
   setText(
     elements.budgetFeasibilityStatus,
-    `Each schedule needs at least ${state.config.steps} credits for predictions. The online policy spent ${state.online.totalCost} of ${state.config.budget} credits. ${lookAheadText}`,
+    `The online policy spent ${state.online.totalCost} of ${state.config.budget} credits.`,
   );
   setText(
     elements.budgetSummary,
-    `The online policy decides from what it has seen so far. ${lookAheadText}`,
+    lookAheadText,
   );
   renderBenchmarkTable(
     elements.benchmarkTableBody,

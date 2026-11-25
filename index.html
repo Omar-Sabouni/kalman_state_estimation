@@ -17,7 +17,7 @@
     <header class="app-heading">
       <div class="app-heading__identity">
         <h1 id="pageTitle">2D estimator comparison</h1>
-        <p class="standfirst">This compares a Kalman filter, an alpha–beta filter and a moving average on the same noisy position measurements.</p>
+        
       </div>
     </header>
 
@@ -143,7 +143,7 @@
     </section>
 
     <section class="appendices" aria-labelledby="appendicesTitle">
-      <header class="section-label"><div><h2 id="appendicesTitle">Corrections on a budget</h2><p>Each correction costs credits. Compare two ways to spend a fixed budget.</p></div></header>
+      <header class="section-label"><div><h2 id="appendicesTitle">Corrections on a budget</h2></div></header>
 
       <details id="budget-strategies" class="appendix-entry">
         <summary><span><strong>Spend a budget of credits</strong></span></summary>
@@ -152,8 +152,8 @@
           <div class="table-region" role="region" aria-labelledby="benchmarkTitle" tabindex="0"><table id="benchmarkTable"><caption id="benchmarkTitle">Whole-run policy comparison</caption><thead><tr><th scope="col">Policy</th><th scope="col">Budget status</th><th scope="col">Total cost</th><th scope="col">Total squared error</th><th scope="col">RMSE</th></tr></thead><tbody id="benchmarkTableBody"><tr class="empty-row"><td colspan="5">Finish the run to compare.</td></tr></tbody></table></div>
           <article class="plot-panel" aria-labelledby="budgetChartHeading"><header class="plot-heading"><h3 id="budgetChartHeading">Action by step</h3><div id="budgetLegend" class="chart-legend" role="group" aria-label="Budget schedule series"></div></header><div class="chart-frame chart-frame--schedule"><svg id="budgetChart" class="chart" viewBox="0 0 960 300" role="img" aria-labelledby="budgetSvgTitle budgetSvgDescription"><title id="budgetSvgTitle">Estimator schedule under the selected compute budget</title><desc id="budgetSvgDescription">Finish the run to compare.</desc></svg></div><p id="budgetSummary" class="chart-summary"></p></article>
           <div class="strategy-grid">
-            <article class="table-panel" aria-labelledby="offlineTitle"><header class="plot-heading"><div><h3 id="offlineTitle">Look-ahead</h3><p>Sees the future path, which a real tracker can't.</p></div></header><p id="offlineSummary" class="summary-line"></p><div class="table-region table-region--schedule" role="region" aria-labelledby="offlineTitle" tabindex="0"><table id="offlineTable"><thead><tr><th scope="col">Step</th><th scope="col">Action</th><th scope="col">Cost</th><th scope="col">Squared error</th></tr></thead><tbody id="offlineTableBody"><tr class="empty-row"><td colspan="4">Finish the run to compare.</td></tr></tbody></table></div></article>
-            <article class="table-panel" aria-labelledby="onlineTitle"><header class="plot-heading"><div><h3 id="onlineTitle">Online</h3><p>Uses only what it has seen.</p></div></header><p id="onlineSummary" class="summary-line"></p><div class="table-region table-region--schedule" role="region" aria-labelledby="onlineTitle" tabindex="0"><table id="onlineTable"><thead><tr><th scope="col">Step</th><th scope="col">Action</th><th scope="col">Cost</th><th scope="col">Squared error</th><th scope="col">Budget left</th></tr></thead><tbody id="onlineTableBody"><tr class="empty-row"><td colspan="5">Finish the run to compare.</td></tr></tbody></table></div></article>
+            <article class="table-panel" aria-labelledby="offlineTitle"><header class="plot-heading"><div><h3 id="offlineTitle">Look-ahead</h3></div></header><p id="offlineSummary" class="summary-line"></p><div class="table-region table-region--schedule" role="region" aria-labelledby="offlineTitle" tabindex="0"><table id="offlineTable"><thead><tr><th scope="col">Step</th><th scope="col">Action</th><th scope="col">Cost</th><th scope="col">Squared error</th></tr></thead><tbody id="offlineTableBody"><tr class="empty-row"><td colspan="4">Finish the run to compare.</td></tr></tbody></table></div></article>
+            <article class="table-panel" aria-labelledby="onlineTitle"><header class="plot-heading"><div><h3 id="onlineTitle">Online</h3></div></header><p id="onlineSummary" class="summary-line"></p><div class="table-region table-region--schedule" role="region" aria-labelledby="onlineTitle" tabindex="0"><table id="onlineTable"><thead><tr><th scope="col">Step</th><th scope="col">Action</th><th scope="col">Cost</th><th scope="col">Squared error</th><th scope="col">Budget left</th></tr></thead><tbody id="onlineTableBody"><tr class="empty-row"><td colspan="5">Finish the run to compare.</td></tr></tbody></table></div></article>
           </div>
         </div>
       </details>
