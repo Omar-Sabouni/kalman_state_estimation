@@ -572,9 +572,9 @@ export function renderTrajectoryChart(svg: SVGSVGElement, model: TrajectoryChart
   if (allPoints.length === 0) {
     clearChart(
       svg,
-      "Start a run to reveal the path",
+      "Press Run to start.",
       model.title ?? "Estimated trajectory",
-      model.description ?? "No trajectory data is available yet."
+      model.description ?? "Press Run to start."
     );
     return;
   }
@@ -671,7 +671,7 @@ export function renderTrajectoryChart(svg: SVGSVGElement, model: TrajectoryChart
 export function renderLineChart(svg: SVGSVGElement, model: LineChartModel): void {
   const series = model.series.filter((item) => item.visible !== false && visiblePoints(item.points).length > 0);
   if (series.length === 0) {
-    clearChart(svg, "Waiting for observations", model.title, model.description);
+    clearChart(svg, "Press Run to start.", model.title, model.description);
     return;
   }
   const points = series.flatMap((item) => visiblePoints(item.points));
@@ -729,7 +729,7 @@ export function renderLineChart(svg: SVGSVGElement, model: LineChartModel): void
 export function renderBarChart(svg: SVGSVGElement, model: BarChartModel): void {
   const data = model.data.filter((item) => finite(item.value));
   if (data.length === 0) {
-    clearChart(svg, "Complete a run to compare estimators", model.title, model.description);
+    clearChart(svg, "Finish the run to compare.", model.title, model.description);
     return;
   }
   const { width, height } = viewBoxSize(svg, 720, 380);
@@ -810,7 +810,7 @@ export function renderBarChart(svg: SVGSVGElement, model: BarChartModel): void {
 export function renderScheduleChart(svg: SVGSVGElement, model: ScheduleChartModel): void {
   const rows = model.rows.filter((row) => row.actions.length > 0);
   if (rows.length === 0) {
-    clearChart(svg, "Waiting for a schedule", model.title, model.description);
+    clearChart(svg, "Finish the run to compare.", model.title, model.description);
     return;
   }
   const { width, height } = viewBoxSize(svg, 960, 300);

@@ -183,7 +183,7 @@ const state: AppState = {
 function showRuntimeError(error: unknown): void {
   const message = error instanceof Error ? error.message : String(error);
   elements.runtimeWarning.hidden = false;
-  elements.runtimeWarning.textContent = `The comparison tool could not finish that calculation: ${message}`;
+  elements.runtimeWarning.textContent = `Comparison failed: ${message}`;
 }
 
 function hideRuntimeError(): void {
@@ -285,7 +285,7 @@ function startBeamSearch(): void {
   const worker = createAnalysisWorker();
   state.beamWorker = worker;
   if (state.visibleSteps >= state.config.steps) {
-    setStatus(elements.offlineSummary, "Working it out…");
+    setStatus(elements.offlineSummary, "Calculating…");
   }
 
   worker.addEventListener("message", (event: MessageEvent<AnalysisWorkerResponse>) => {
@@ -301,7 +301,7 @@ function startBeamSearch(): void {
       worker.terminate();
       state.beamWorker = null;
       if (state.visibleSteps >= state.config.steps) {
-        setStatus(elements.offlineSummary, `Look-ahead schedule unavailable: ${event.data.message}`);
+        setStatus(elements.offlineSummary, `Look-ahead failed: ${event.data.message}`);
       }
     }
   });
@@ -310,7 +310,7 @@ function startBeamSearch(): void {
       worker.terminate();
       state.beamWorker = null;
       if (state.visibleSteps >= state.config.steps) {
-        setStatus(elements.offlineSummary, "Look-ahead schedule could not start.");
+        setStatus(elements.offlineSummary, "Look-ahead failed to start. Reload the page to try again.");
       }
       showRuntimeError(event.message);
     }
@@ -347,7 +347,7 @@ function replaceExperiment(
     renderComputedResults();
     renderLiveState();
     startBeamSearch();
-    setStatus(elements.runStatus, "Ready to run");
+    setStatus(elements.runStatus, "Ready");
   } catch (error) {
     showRuntimeError(error);
   }
@@ -526,7 +526,7 @@ function renderDiagnostics(visible: readonly SimulationStep[]): void {
     ],
     xLabel: "time step",
     yLabel: "position gain",
-    title: "Potential Kalman position gain",
+    title: "Kalman position gain",
     description: "Absolute diagonal position gains available before correction on each visible step.",
     domainX: { min: 1, max: state.config.steps },
     includeZero: true,
@@ -582,8 +582,6 @@ function renderLeaderboard(visible: readonly SimulationStep[]): void {
   const previous = state.rolling[state.visibleSteps - 2];
   if (current === undefined) {
     renderRankingTable(elements.rankingTableBody, []);
-    setText(elements.leaderName, state.config.rollingWindow);
-    setText(elements.leaderRmse, "");
     setText(elements.innovationMetricValue, "—");
     setText(elements.covarianceMetricValue, "—");
     return;
@@ -597,8 +595,6 @@ function renderLeaderboard(visible: readonly SimulationStep[]): void {
       : current.values[method] - previous.values[method],
   }));
   renderRankingTable(elements.rankingTableBody, rows);
-  setText(elements.leaderName, state.config.rollingWindow);
-  setText(elements.leaderRmse, "");
   const latest = visible.at(-1);
   setText(
     elements.innovationMetricValue,
@@ -686,16 +682,11 @@ function renderComparison(): void {
   if (state.visibleSteps < state.config.steps) {
     clearChart(
       elements.comparisonChart,
-      "Complete the run to compare estimators",
+      "Finish the run to compare.",
       "Estimator RMSE comparison",
-      "Whole-run RMSE is available after all simulation steps are visible.",
+      "Finish the run to compare.",
     );
-    setText(
-      elements.comparisonSummary,
-      state.visibleSteps === 0
-        ? "Run the trajectory to compare the whole run."
-        : `Complete the run to calculate whole-run RMSE (${state.visibleSteps}/${state.config.steps} samples visible).`,
-    );
+    setText(elements.comparisonSummary, "");
     return;
   }
   const data: BarDatum[] = ESTIMATOR_IDS.map((method) => ({
@@ -731,16 +722,16 @@ function renderBudgetResults(): void {
   if (state.visibleSteps < state.config.steps) {
     clearChart(
       elements.budgetChart,
-      "Complete the run to calculate schedules",
-      "Compute-budget schedule",
-      "Update schedules are available after all simulation steps are visible.",
+      "Finish the run to compare.",
+      "Budget schedule",
+      "Finish the run to compare.",
     );
     renderBenchmarkTable(elements.benchmarkTableBody, [], state.config.budget);
     renderScheduleTable(elements.onlineTableBody, [], true);
     renderScheduleTable(elements.offlineTableBody, [], false);
-    setText(elements.onlineSummary, "Finish the run first.");
-    setText(elements.offlineSummary, "Finish the run first.");
-    setText(elements.budgetFeasibilityStatus, "Finish the run first.");
+    setText(elements.onlineSummary, "");
+    setText(elements.offlineSummary, "");
+    setText(elements.budgetFeasibilityStatus, "Finish the run to compare.");
     setText(elements.budgetSummary, "");
     return;
   }
@@ -759,7 +750,7 @@ function renderBudgetResults(): void {
   });
   renderScheduleChart(elements.budgetChart, {
     rows: scheduleRows,
-    title: "Kalman update actions under the selected credit cap",
+    title: "Kalman update actions within the budget",
     description: "Each cell is the update action actually executed at one time step.",
     xLabel: "time step",
   });
@@ -770,7 +761,7 @@ function renderBudgetResults(): void {
   );
   if (state.beam === null) {
     renderScheduleTable(elements.offlineTableBody, [], false);
-    setText(elements.offlineSummary, "Working it out…");
+    setText(elements.offlineSummary, "Calculating…");
   } else {
     renderScheduleTable(elements.offlineTableBody, state.beam.rows, false);
     setText(
@@ -916,14 +907,14 @@ function bindEvents(): void {
     stopTimer();
     advanceOneStep();
     if (state.visibleSteps < state.config.steps) {
-      setStatus(elements.runStatus, "Advanced one step");
+      setStatus(elements.runStatus, "Paused");
     }
   });
   elements.resetButton.addEventListener("click", () => {
     stopTimer();
     state.visibleSteps = 0;
     renderLiveState();
-    setStatus(elements.runStatus, "Run restarted");
+    setStatus(elements.runStatus, "Ready");
   });
   elements.restoreDefaultsButton.addEventListener("click", () => {
     replaceExperiment(createEngineConfig(), "balanced", "balanced");
