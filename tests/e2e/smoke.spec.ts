@@ -17,9 +17,9 @@ test("loads the page and completes the analyses", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
 
-  await expect(page).toHaveTitle(/Three ways to track a target/);
+  await expect(page).toHaveTitle(/2D estimator comparison/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Three ways to track a target",
+    "2D estimator comparison",
   );
   await expect(page.locator("#runtimeWarning")).toBeHidden();
   await expect(page.locator("#runButton")).toBeEnabled();
@@ -28,7 +28,7 @@ test("loads the page and completes the analyses", async ({ page }) => {
   await expect(page.locator("#budget-strategies #budget")).toHaveCount(1);
   await expect(page.locator("#diagnosticView")).toHaveValue("rmse");
   await expect(page.locator('[data-diagnostic-view="rmse"]')).toBeVisible();
-  await expect(page.locator("#comparisonSummary")).toContainText("Run the trajectory");
+  await expect(page.locator("#comparisonSummary")).toHaveText("");
 
   await page.locator("#stepButton").click();
 
@@ -95,7 +95,7 @@ test("runs, pauses, restarts, and switches scenarios", async ({ page }) => {
 
   await page.locator("#resetButton").click();
   await expect(page.locator("#stepValue")).toHaveText("0");
-  await expect(page.locator("#runStatus")).toHaveText("Run restarted");
+  await expect(page.locator("#runStatus")).toHaveText("Ready");
 
   await page.locator("#scenarioPreset").selectOption("smooth");
   await expect(page.locator("#scenarioPreset")).toHaveValue("smooth");
@@ -132,7 +132,7 @@ test("keeps the notebook usable across responsive widths and text zoom", async (
   })`) as ViewportMetrics;
   expect(initialViewport.scrollWidth).toBe(initialViewport.clientWidth);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Three ways to track a target",
+    "2D estimator comparison",
   );
 
   await page.locator("#stepButton").click();

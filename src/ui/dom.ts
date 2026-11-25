@@ -37,8 +37,6 @@ export const UI_IDS = {
   stepProgress: "stepProgress",
   stepValue: "stepValue",
   stepTotal: "stepTotal",
-  leaderName: "leaderName",
-  leaderRmse: "leaderRmse",
   stepMetricValue: "stepMetricValue",
   innovationMetricValue: "innovationMetricValue",
   covarianceMetricValue: "covarianceMetricValue",
@@ -113,8 +111,6 @@ export interface UiElements {
   stepProgress: HTMLProgressElement;
   stepValue: HTMLElement;
   stepTotal: HTMLElement;
-  leaderName: HTMLElement;
-  leaderRmse: HTMLElement;
   stepMetricValue: HTMLElement;
   innovationMetricValue: HTMLElement;
   covarianceMetricValue: HTMLElement;
@@ -213,8 +209,6 @@ export function getElements(root: ParentNode = document): UiElements {
     stepProgress: html(UI_IDS.stepProgress, HTMLProgressElement),
     stepValue: html(UI_IDS.stepValue, HTMLElement),
     stepTotal: html(UI_IDS.stepTotal, HTMLElement),
-    leaderName: html(UI_IDS.leaderName, HTMLElement),
-    leaderRmse: html(UI_IDS.leaderRmse, HTMLElement),
     stepMetricValue: html(UI_IDS.stepMetricValue, HTMLElement),
     innovationMetricValue: html(UI_IDS.innovationMetricValue, HTMLElement),
     covarianceMetricValue: html(UI_IDS.covarianceMetricValue, HTMLElement),

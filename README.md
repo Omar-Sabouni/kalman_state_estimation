@@ -1,4 +1,4 @@
-# 2D Estimator Diagnostics
+# 2D estimator comparison
 
 An interactive, client-side notebook for comparing Kalman, Alpha–Beta, and
 Moving Average estimates of uncertain 2D motion. The trajectory, playback,

@@ -150,7 +150,7 @@ export function renderRankingTable(
     .filter((row) => Number.isFinite(row.rmse ?? row.score))
     .sort((left, right) => (left.rmse ?? left.score ?? Infinity) - (right.rmse ?? right.score ?? Infinity));
   if (sorted.length === 0) {
-    replaceRows(tbody, [emptyRow(4, "Waiting for the first observation.")]);
+    replaceRows(tbody, [emptyRow(4, "Press Run to start.")]);
     return;
   }
   replaceRows(tbody, sorted.map((item, index) => {
@@ -171,7 +171,7 @@ export function renderDiagnosticsTable(
   diagnostics: readonly DiagnosticsRow[]
 ): void {
   if (diagnostics.length === 0) {
-    replaceRows(tbody, [emptyRow(4, "Start a run to populate diagnostics.")]);
+    replaceRows(tbody, [emptyRow(4, "Press Run to start.")]);
     return;
   }
   replaceRows(tbody, diagnostics.map((item) => {
@@ -197,7 +197,7 @@ export function renderBenchmarkTable(
 ): void {
   const valid = benchmark.filter((row) => Number.isFinite(row.rmse));
   if (valid.length === 0) {
-    replaceRows(tbody, [emptyRow(5, "Complete the run to compare policies.")]);
+    replaceRows(tbody, [emptyRow(5, "Finish the run to compare.")]);
     return;
   }
   const feasible = (row: BenchmarkRow): boolean =>
@@ -233,7 +233,7 @@ export function renderScheduleTable(
 ): void {
   const columns = includeBudget ? 5 : 4;
   if (schedule.length === 0) {
-    replaceRows(tbody, [emptyRow(columns, "No schedule is available.")]);
+    replaceRows(tbody, [emptyRow(columns, "Finish the run to compare.")]);
     return;
   }
   replaceRows(tbody, schedule.map((item) => {
